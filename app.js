@@ -5,20 +5,25 @@ require('dotenv').config()
 
 const app = express()
 const port = 3001
-const API_SERVICE_URL = "https://api.airtable.com/v0/appUFi3IVRgOv95nN/Points";
+const BASE_SERVICE_URL = "https://api.airtable.com/v0/appUFi3IVRgOv95nN"
 
 app.use(morgan('dev'));
 
-app.use('/data', createProxyMiddleware({
-  target: API_SERVICE_URL,
-  changeOrigin: true,
-  pathRewrite: {
-    [`^/data`]: '',
-  },
-  headers: {
-    'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`
-  }
-}))
+function createProxyUrl(clientPath, servicePath) {
+  app.use(clientPath, createProxyMiddleware({
+    target: BASE_SERVICE_URL + servicePath,
+    changeOrigin: true,
+    pathRewrite: {
+      [`^${clientPath}`]: '',
+    },
+    headers: {
+      'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`
+    }
+  }))
+}
+
+createProxyUrl('/data', '/Points')
+createProxyUrl('/itineraries', '/Itineraries')
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
